@@ -31,7 +31,7 @@ class RESPHandler:
         arr_len = int(buffer[1:crlf])
 
         if arr_len == -1:
-            return (None, 4)
+            return (None, 5)
         
         items = []
         cursor = crlf + 2
@@ -67,7 +67,7 @@ class RESPHandler:
             return self._decode_array(buffer)
 
         if buffer_type == b"-":
-            error = buffer[0:crlf_index]
+            error = buffer[1:crlf_index]
             error = error.decode('utf-8')
 
             return (error, crlf_index + 2)
@@ -75,9 +75,32 @@ class RESPHandler:
         return (None, 0)
     
     def encode(self, value):
-        pass
+        crlf = b"\r\n"
+        if isinstance(value, str):
+            return b"+" + value.encode('utf-8') + crlf
+
+        if type(value) == int: # bool is sub class of int so True will be encoded as integer
+            return b":" + str(value).encode('utf-8') + crlf
+
+        if isinstance(value, bytes):
+            length = len(value)
+            return b"$" + str(length).encode('utf-8') + crlf + value + crlf
+
+        if value is None:
+            return b"$" + str("-1").encode("utf-8") + crlf
+
+        if isinstance(value, list):
+            response = b"*" + str(len(value)).encode('utf-8') + crlf
+            for item in value:
+                response += self.encode(item)
+            return response 
+
+        if isinstance(value, Exception):
+            return b"-" + str(value).encode('utf-8') + crlf
 
 handler = RESPHandler()
+
+print(handler.encode(Exception("unknown command")))
 
 """
 # simple Strings
