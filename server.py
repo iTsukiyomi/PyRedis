@@ -1,12 +1,14 @@
 import socket
 import selectors
 
-
+from protocol import RESPHandler
 
 class RedisServer:
     def __init__(self, host = "127.0.0.1", port = 6379):
         self.host = host
         self.port = port
+
+        self.handler = RESPHandler()
 
         self.selector = selectors.DefaultSelector()
         self.clients = {}
@@ -49,6 +51,19 @@ class RedisServer:
             return
 
         self.clients[client_socket].extend(data)
+
+        while self.clients[client_socket]:
+            print("BUFFER:", repr(self.clients[client_socket]))
+
+            command, consumed = self.handler.decode(self.clients[client_socket])
+
+            print("DECODED:", repr(command), "CONSUMED:", consumed)
+            if consumed == 0:
+                break
+            del self.clients[client_socket][:consumed]
+
+            if command == ["PING"]:
+                client_socket.sendall(self.handler.encode("PONG"))
 
         print(data)
 

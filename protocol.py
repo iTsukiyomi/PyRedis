@@ -100,7 +100,6 @@ class RESPHandler:
 
 handler = RESPHandler()
 
-print(handler.encode(Exception("unknown command")))
 
 """
 # simple Strings
