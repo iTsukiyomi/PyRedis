@@ -88,27 +88,3 @@ class CommandHandler:
         self.store.set(args[0], str(current))
         return current
 
-store = DataStore()
-command = CommandHandler(store)
-
-tests = [
-    ["PING"],
-    ["ECHO", "hello"],
-    ["SET", "user", "Alice"],
-    ["GET", "user"],
-    ["GET", "missing"],
-    ["EXISTS", "user", "missing"],
-    ["DEL", "user"],
-    ["EXISTS", "user"],
-    ["INCR", "visits"],
-    ["INCR", "visits"],
-    ["GET", "visits"],
-    ["DECR", "visits"],
-    ["GET", "visits"],
-    ["INCR", "user"],
-    ["GET"],
-    ["UNKNOWN"]
-]
-
-for test in tests:
-    print(test, "->", command.execute(test))
