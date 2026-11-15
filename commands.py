@@ -11,7 +11,10 @@ class CommandHandler:
             "DEL": self.cmd_del,
             "EXISTS": self.cmd_exists,
             "INCR": self.cmd_incr,
-            "DECR": self.cmd_decr
+            "DECR": self.cmd_decr,
+            "EXPIRE": self.cmd_expire,
+            "TTL": self.cmd_ttl,
+            "PTTL": self.cmd_pttl
         }
 
     def execute(self, command_list: list[str]):
@@ -26,14 +29,23 @@ class CommandHandler:
 
         if command in ("DEL", "EXISTS") and arg_count < 1:
             return Exception("Wrong number of arguments")
+
+        if command == "SET":
+            if arg_count not in (2,4):
+                return Exception("Wrong number of arguments")
+
+            if arg_count == 4 and args[2].upper() != "EX":
+                return Exception("syntax error")
         
         arity = {
             "PING": 0,
-            "SET": 2,
             "GET": 1,
             "ECHO": 1,
             "INCR": 1,
             "DECR": 1,
+            "EXPIRE": 2,
+            "TTL": 1,
+            "PTTL": 1
         }
 
         if command in arity and arity[command] != arg_count:
@@ -49,6 +61,9 @@ class CommandHandler:
 
     def cmd_set(self, args):
         self.store.set(args[0], args[1])
+        if len(args) == 4:
+            ttl = int(args[3]) * 1000
+            self.store.set_expiry(args[0], ttl)
         return "OK"
 
     def cmd_get(self, args):
@@ -88,3 +103,12 @@ class CommandHandler:
         self.store.set(args[0], str(current))
         return current
 
+    def cmd_expire(self, args):
+        return self.store.set_expiry(args[0], int(args[1]) * 1000)
+
+    def cmd_ttl(self, args):
+        ttl = self.store.get_ttl_ms(args[0])
+        return ttl // 1000 if ttl >= 0 else ttl
+
+    def cmd_pttl(self, args):
+        return self.store.get_ttl_ms(args[0])
