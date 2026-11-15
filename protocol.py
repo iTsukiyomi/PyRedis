@@ -98,7 +98,6 @@ class RESPHandler:
         if isinstance(value, Exception):
             return b"-" + str(value).encode('utf-8') + crlf
 
-handler = RESPHandler()
 
 
 """
